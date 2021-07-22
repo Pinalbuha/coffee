@@ -5,10 +5,9 @@ from jose import jwt
 from urllib.request import urlopen
 
 
-
 AUTH0_DOMAIN = 'pinal9.us.auth0.com'
 ALGORITHMS = ['RS256']
-API_AUDIENCE = 'coffee'
+API_AUDIENCE = 'http://localhost:5000'
 
 ## AuthError Exception
 '''
@@ -61,7 +60,7 @@ def get_token_auth_header():
         }, 401)
 
     token = part[1]
-    return token
+    return token    
    #raise Exception('Not Implemented')
 
 '''
@@ -75,17 +74,19 @@ def get_token_auth_header():
     it should raise an AuthError if the requested permission string is not in the payload permissions array
     return true otherwise
 '''
+
+
 def check_permissions(permission, payload):
     if 'permissions' not in payload:
         raise AuthError({
-            'code' : 'invalid_claims',
-            'description' :'Permissions not included in Jwt.'
+            'code': 'invalid_claims',
+            'description': 'Permissions not included in Jwt.'
         }, 400)
 
-    if permission not in payload['permissions'] :
+    if permission not in payload['permissions']:
         raise AuthError({
-            'code' : 'unauthorized',
-            'description' :'Permission not found.'
+            'code': 'unauthorized',
+            'description': 'Permission not found.'
 
         }, 403)
     return True
@@ -104,8 +105,8 @@ def check_permissions(permission, payload):
 
     !!NOTE urlopen has a common certificate error described here: https://stackoverflow.com/questions/50236117/scraping-ssl-certificate-verify-failed-error-for-http-en-wikipedia-org
 '''
-
 def verify_decode_jwt(token):
+
     jsonurl = urlopen(f'https://pinal9.us.auth0.com/.well-known/jwks.json')
     jwks = json.loads(jsonurl.read())
     unverified_header = jwt.get_unverified_header(token)
@@ -153,6 +154,7 @@ def verify_decode_jwt(token):
         'code': 'invalid_header',
                 'description': 'Unable to find the appropriate key.'
     }, 400)
+    #raise Exception('Not Implemented')
 
 '''
 @TODO implement @requires_auth(permission) decorator method
