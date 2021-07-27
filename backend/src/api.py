@@ -44,7 +44,8 @@ def public_drinks():
             'success': True,
             'drinks': [drink.short() for drink in all_drinks]
         }), 200
-    except Exception:
+    except Exception as e:
+        print(e)
         abort(500)
 
 '''
@@ -66,7 +67,8 @@ def drinks_detail(payload):
             'success': True,
             'drinks': [drink.long() for drink in all_drinks]
         }), 200
-    except Exception:
+    except Exception as e:
+        print(e)
         abort(500)
 
 '''
@@ -186,22 +188,7 @@ def unprocessable(error):
 @TODO implement error handler for 404
     error handler should conform to general task above
 '''
-@app.errorhandler(404)
-def not_found(error):
-    return jsonify({
-        'success': False,
-        'error': 404,
-        'message': "Not found"
-    }), 404
 
-
-@app.errorhandler(500)
-def internal(error):
-    return jsonify({
-        'success': False,
-        'error': 500,
-        'message': "Internal server error"
-    }), 500
 
 '''
 @TODO implement error handler for AuthError
