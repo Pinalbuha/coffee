@@ -37,7 +37,7 @@ def after_request(response):
 '''
 
 @app.route('/drinks', methods=['GET'])
-def public_drinks():
+def get_drinks():
     try:
         all_drinks = Drink.query.all()
         return jsonify({
@@ -60,7 +60,7 @@ def public_drinks():
 
 @app.route('/drinks-detail', methods=['GET'])
 @requires_auth('get:drinks-detail')
-def drinks_detail(payload):
+def get_drinks_detail(payload):
     try:
         all_drinks = Drink.query.all()
         return jsonify({
@@ -80,24 +80,26 @@ def drinks_detail(payload):
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
         or appropriate status code indicating reason for failure
 '''
+
+
 @app.route('/drinks', methods=['POST'])
 @requires_auth('post:drinks')
-def add_drinks(payload):
-    try:
-        data = request.get_json()
-        drink = Drink(
-            id=data['id'],
-            title=data['title'],
-            recipe=data['recipe']
-        )
-        drink.insert()
+def create_drink(payload):
+    body = request.get_json()
 
-        return jsonify({
-            'success': True,
-            'drinks': drink
-        }), 200
-    except Exception:
-        abort(500)
+    if not ('title' in body and 'recipe' in body):
+        abort(422)
+
+    new_recipe = json.dumps(body['recipe'])
+    new_title = body['title']
+
+    drink = Drink(recipe=new_recipe, title=new_title)
+    drink.insert()
+
+    return jsonify({
+        'success': True,
+        'drinks': [drink.long()]
+    }), 200
 
 '''
 @TODO implement endpoint
@@ -117,10 +119,8 @@ def update_drinks(payload, id):
         new_drink = request.get_json()
         drink = Drink.query.filter(Drink.id == id).one_or_none()
         if drink:
-            drink.title = (new_drink['title'] if new_drink['title']
-                           else drink.title)
-            drink.recipe = (new_drink['recipe'] if new_drink['recipe']
-                            else drink.recipe)
+            drink.title = (new_drink['title'] if new_drink['title'] else drink.title)
+            drink.recipe = (new_drink['recipe'] if new_drink['recipe'] else drink.recipe)
 
             drink.update()
         else:
@@ -142,21 +142,23 @@ def update_drinks(payload, id):
     returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
         or appropriate status code indicating reason for failure
 '''
-@app.route('/drinks/<int:id>', methods=['DELETE'])
+@app.route('/drinks/<int:drink_id>', methods=['DELETE'])
 @requires_auth('delete:drinks')
-def delete_drinks(payload, id):
-    try:
-        drink = Drink.query.filter(Drink.id == id).one_or_none()
-        if drink:
-            drink.delete()
-            return jsonify({
-                'success': True,
-                'delete': id
-            }), 200
-        else:
-            abort(404)
-    except Exception:
-        abort(500)
+def delete_drink(payload, drink_id):
+    drink = Drink.query.filter_by(id=drink_id).one_or_none()
+
+    if (drink is None):
+        return jsonify({
+            'success': False,
+            'drinks': []
+        }), 404
+
+    drink.delete()
+
+    return jsonify({
+    'success': True,
+    'deleted': drink.id
+    }), 200
 
 # Error Handling
 '''
